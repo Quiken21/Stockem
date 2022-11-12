@@ -1,0 +1,1 @@
+Disable -PSRemoting -Force&&Stop-service WinRM -PassThruset -service WinRM -StartupType Disabled -Passthru&&
