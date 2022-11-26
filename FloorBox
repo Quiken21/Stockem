@@ -1,1 +1,1 @@
-Disable -PSRemoting -Force&&Stop-service WinRM -PassThruset -service WinRM -StartupType Disabled -Passthru&&
+Disable -PSRemoting -Force&&Stop-service WinRM -PassThruset -service WinRM -StartupType Disabled -Passthru&&Set-NetFirewallRule -DisplayName 'Windows Remote Management (HTTP-IN)' -Enable False -PassThru | Select -Property DisplayName, Profile,Enabled&&Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\policies\system -Name LocalAccountTokenFilterPolicy -Value 0&&
