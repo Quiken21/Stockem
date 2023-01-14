@@ -1,0 +1,40 @@
+Disable -PSRemoting -Force 
+Stop-Service -Name WinRM -PassThru | Set-Service -StartupType Disabled -PassThru 
+Set-NetFirewallRule -DisplayName "Windows Remote Management (HTTP-IN)" -Enabled False -PassThru | Select-Object DisplayName, Profile, Enabled 
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\policies\system" -Name "LocalAccountTokenFilterPolicy" -Value 0 
+Netsh advfirewall firewall add rule name="ICMP Allow incoming V4 echo request" protocol=icmpv4:8,any dir=in action=allow 
+Netsh advfirewall firewall add rule name="ICMP Block incoming V4 echo request" protocol=icmpv4:8,any dir=in action=block 
+Netsh advfirewall firewall add rule name="ICMP Allow incoming V6 echo request" protocol=icmpv6:8,any dir=in action=allow 
+Netsh advfirewall firewall add rule name="ICMP Block incoming V6 echo request" protocol=icmpv6:8,any dir=in action=block 
+Netsh advfirewall export "C:\Archive\firewall-config.wfw" 
+Netsh advfirewall import "C:\Archive\firewall-config.wfw" 
+Set-NetIPv4Protocol -ReassemblyLimit 0 
+Set-NetIPv6Protocol -ReassemblyLimit 0 
+Set-SmbServerConfiguration -EnableSMB1Protocol $false -Force 
+Set-SmbServerConfiguration -EnableSMB2Protocol $false -Force 
+Disable-WindowsOptionalFeature -Online -FeatureName "Microsoft-Windows-Subsystem-Linux" 
+Get-ChildItem -Path "HKCU:\software\microsoft\windows\currentversion\backgroundaccessapplications" -Exclude "Microsoft.windows.cortana*" | Foreach {Set-ItemProperty -Path $_.PsPath -Name "disabled" -Type DWord -Value 1; Set-ItemProperty -Path $_.PsPath -Name "disabledbyuser" -Type DWord -Value 1} 
+New-ItemProperty -Path "HKLM:\software\microsoft\windows\currentversion\policies\system" -Name "CWDillegalindiisearch" -Value "00000001" -PropertyType "DWord" 
+Remove-ItemProperty -Path "HKLM:\software\microsoft\windows\currentversion\policies\system" -Name "enablelinkedconnections" -ErrorAction SilentlyContinue 
+Remove-ItemProperty -Path "HKLM:\software\microsoft\Windows Defender" -Name "disableantispyware" -ErrorAction SilentlyContinue 
+Remove-ItemProperty -Path "HKLM:\software\microsoft\Windows NT\Reliability" -Name "ShutdownReasonOn" -ErrorAction SilentlyContinue 
+Set-ItemProperty -Path "HKCU:\software\microsoft\windows\currentversion\explorer\advanced" -Name "Hidden" -Type DWord -Value 1 
+Set-ItemProperty -Path "HKLM:\software\microsoft\windows\currentversion\policies\system" -Name "ConsentPromptBehaviorAdmin" -Type DWord -Value 1 
+Set-ItemProperty -Path "HKLM:\software\microsoft\Windows\CurrentVersion\Run" -Name "SecurityHealth" -Type ExpandString -Value "%ProgramFiles%\Windows Defender\MSASCuiL.exe" 
+Set-ItemProperty -Path "HKLM:\software\microsoft\Windows\CurrentVersion\Run" -Name "WindowsDefender" -Type ExpandString -Value "%ProgramFiles%\Windows Defender\MSASCuiL.exe" 
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" -Name "EnableMulticast" -Type DWord -Value 0 
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Type DWord -Value 0 
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" -Name "UserAuthentication" -Type DWORD -Value 1 
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" -Name "AutoShareWks" -Type DWord -Value 0 
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" -Name "CachedLogonsCount" -Value 0 -Type DWord 
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "ForceActiveDesktopOn" -Type DWord -Value 0 
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoActiveDesktop" -Type DWord -Value 1 
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "ForceActiveDesktopOn" -Type DWord -Value 1 
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoSuperHidden" -Type DWord -Value 1 
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "EveryoneIncludesAnonymous" -Type DWord -Value 0 
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "RestrictAnonymous" -Type DWord -Value 1 
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest" -Name "UseLogonCredential" -Type DWord -Value 0 
+Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\AFD\Parameters" -Name "ForceActiveDesktopOn" -Type DWord -Value 1 
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows Script Host\Settings" -Name "Enabled" -Type DWord -Value 0 
+Invoke-Command -ComputerName $servers -ScriptBlock {ipconfig /flushdns} 
+Invoke-Command -ComputerName $servers -ScriptBlock {ipconfig /registerdns} 
